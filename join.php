@@ -1,54 +1,36 @@
 <?php
-if (isset($_POST['group_name']) && isset($_POST['area_code']) && isset($_POST['exchange']) && isset($_POST['station_code'])) {
-require_once('twilio-php-master/Services/Twilio.php');
-$sid = 'AC735a473a1e737c406e02b3fce386b9a3';
-$token = '23ee6ae5e580e9190d66a414901d3f4f';
+if (isset($_POST['group_name']) &&
+    isset($_POST['area_code']) &&
+    isset($_POST['exchange']) &&
+    isset($_POST['station_code'])) {
+	require_once('functions.php');
 
-$number = '+1' . $_POST['area_code'] . $_POST['exchange'] . $_POST['station_code'];
-$group_name = $_POST['group_name'];
-$failed = false;
-$message = "";
+	$number = '+1' .
+		$_POST['area_code'] .
+		$_POST['exchange'] .
+		$_POST['station_code'];
+	$failed = false;
+	$message = 'Joined group!';
 
-$db = new PDO('mysql:host=localhost;dbname=wuday;charset=utf8', 'wuday', 'password');
-
-$stmt = $db->prepare('SELECT id FROM people WHERE number=? AND group_id IS NOT NULL');
-$stmt->execute(array($number));
-$rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-if (count($rows) == 0) {
-	$stmt = $db->prepare('SELECT id FROM groups WHERE name=?');
-	$stmt->execute(array($group_name));
-	$rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-	if (count($rows) == 0) {
+	try {
+		$verification_code = join_group($_POST['group_name'], $number)
+			if ($verification_code) {
+				$message = "Joined group! You're about to recieve a call to " .
+				"verify your phone number. When prompted, enter this code: ";
+			}
+	}
+	catch (GroupDoesNotExistException $e) {
 		$failed = true;
-		$message = "That group doesn't exist. Perhaps you would like to create it?";
+		$message = 'That group does not exist.';
 	}
-	else {
-		$group_id = $rows[0]['id'];
-		$stmt = $db->prepare('SELECT id FROM people WHERE number=? AND group_id IS NULL');
-		$stmt->execute(array($number));
-		$rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-		if (count($rows) == 0) {
-			$stmt = $db->prepare('INSERT INTO people(number, group_id) VALUES(:number, :group_id)');
-			$stmt->execute(array(':number' => $number, ':group_id' => $group_id));
-			
-			$client = new Services_Twilio($sid, $token);
-			$response = $client->account->outgoing_caller_ids->create($number, array('CallDelay' => 5));
-			$message = "Joined group! You're about to recieve a call to verify your phone number. When prompted, enter this code: ";
-			$message .= $response->validationCode;
-		}
-		else {
-			$stmt = $db->prepare('UPDATE people SET group_id=? WHERE number=?');
-			$stmt->execute(array($group_id, $number));
-		}
-		$message = "Group joined!"
+	catch (AlreadyGroupMemberException $e) {
+		$failed = true;
+		$message = "You're already a member of a group. You have to leave " .
+			"your current group before you can join another."
 	}
 }
-else {
-	$failed = true;
-	$message = "You're already a member of a group. You have to leave your current group before you can join another.";
-}
-}
-?><!DOCTYPE html>
+?>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="utf-8">

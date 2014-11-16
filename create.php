@@ -1,25 +1,19 @@
 <?php
 if (isset($_POST['name'])) {
-$name = $_POST['name'];
-$failed = false;
-$message = '';
-
-$db = new PDO('mysql:host=localhost;dbname=wuday;charset=utf8', 'wuday', 'password');
-
-$stmt = $db->prepare('SELECT id FROM groups WHERE name=?');
-$stmt->execute(array($name));
-$rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-if (count($rows) == 0) {
-	$stmt = $db->prepare('INSERT INTO groups(name) VALUES(:name)');
-	$stmt->execute(array(':name' => $group_name));
-	$message = 'Group created!'
+	require_once('functions.php');
+	$failed = false;
+	$message = 'Group created!';
+	
+	try {
+		create_group($_POST['name']);
+	}
+	catch(GroupNameInUseException $e) {
+		$failed = true;
+		$message = 'That group name is unavailable. Sorry!';
+	}
 }
-else {
-	$failed = true;
-	$message = 'That group name is unavailable. Sorry!'
-	}
-	}
-?><!DOCTYPE html>
+?>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="utf-8">

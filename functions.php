@@ -1,4 +1,10 @@
 <?php
+function get_database() {
+	return new PDO('mysql:host=localhost;dbname=wuday;charset=utf8',
+	               'wuday',
+	               'password');
+}
+
 function get_twilio_client() {
 	require_once('twilio-php-master/Services/Twilio.php');
 	$sid = 'AC735a473a1e737c406e02b3fce386b9a3';
@@ -14,8 +20,43 @@ function match_exists($query, $parameters) {
 	return $rows[0]['result'];
 }
 
-class GroupDoesNotExistException extends Exception {}
 class AlreadyGroupMemberExcpetion extends Exception {}
+class GroupDoesNotExistException extends Exception {}
+class GroupNameInUseException extends Exception {}
+class NotGroupMemberException extends Exception {}
+
+function create_group($name) {
+	if (match_exists('SELECT id FROM groups WHERE name=?', array(name))) {
+		throw new GroupNameInUseException();
+	}
+	else {
+		$db = get_database();
+		$stmt = $db->prepare('INSERT INTO groups(name) VALUES(:name)');
+		$stmt->execute(array(':name' => $group_name));
+	}
+}
+
+function delete_group($name) {
+	$db = get_database();
+
+	$stmt = $db->prepare('SELECT id FROM groups WHERE name = ?');
+	$stmt->execute(array($name));
+	$rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+	if (count($rows) == 0) {
+		throw new GroupDoesNotExistException();
+	}
+	else {
+		$group_id = $rows[0]['id'];
+
+		$stmt = $db->prepare('DELETE FROM groups WHERE id = ?');
+		$stmt->execute(array($group_id));
+
+		$stmt = $db->prepare('UPDATE people SET group_id = NULL' .
+		                     'WHERE group_id = ?');
+		$stmt->execute(array($group_id));
+	}
+}
 
 function join_group($group_name, $phone_number) {
 	if (match_exists('SELECT id FROM people' .
@@ -61,4 +102,16 @@ function join_group($group_name, $phone_number) {
 		throw new AlreadyGroupMemberException();
 	}
 }
-?>
+
+function leave_group($phone_number) {
+	if (match_exists('SELECT number FROM people' .
+	                 'WHERE number = ? AND group_id IS NOT NULL',
+	                 array($number)) ) {
+		$db = get_database();
+		$stmt = $db->prepare('UPDATE people SET group_id = NULL WHERE number = ?');
+		$stmt->execute(array($number));
+	}
+	else {
+		throw new NotGroupMemberException();
+	}
+}

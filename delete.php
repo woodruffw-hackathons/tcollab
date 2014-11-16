@@ -1,28 +1,16 @@
 <?php
-if (isset($name)) {
-$name = $_POST['name'];
-$failed = false;
-$message = '';
+if (isset($_POST['name'])) {
+	$failed = false;
+	$message = 'Group deleted.';
 
-$db = new PDO('mysql:host=localhost;dbname=wuday;charset=utf8', 'wuday', 'password');
-
-$stmt = $db->prepare('SELECT id FROM groups WHERE name=?');
-$stmt->execute(array($name));
-$rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-if (count($rows) == 0) {
-	$failed = true;
-	$message = 'That group does not exist.'
+	try {
+		delete_group($_POST['name']);
+	}
+	catch (GroupDoesNotExistException $e) {
+		$failed = true;
+		$message = 'That group does not exist.';
+	}
 }
-else {
-	$group_id = $rows[0]['id'];
-	$stmt = $db->prepare('DELETE FROM groups WHERE id=?');
-	$stmt->execute(array($group_id));
-	
-	$stmt = $db->prepare('UPDATE people SET group_id=NULL WHERE group_id=?');
-	$stmt->execute(array($group_id));
-	$message = 'Group deleted.'
-	}
-	}
 ?><!DOCTYPE html>
 <html lang="en">
   <head>

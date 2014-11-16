@@ -1,24 +1,25 @@
 <?php
-if (isset($_POST['area_code']) && isset($_POST['exchange']) && isset($_POST['station_code'])) {
-$number = '+1' . $_POST['area_code'] . $_POST['exchange'] . $_POST['station_code'];
-$failed = false;
-$message = "";
+if (isset($_POST['area_code']) &&
+    isset($_POST['exchange']) &&
+    isset($_POST['station_code'])) {
+	require_once('functions.php');
+	$number = '+1' .
+		$_POST['area_code'] .
+		$_POST['exchange'] .
+		$_POST['station_code'];
+	$failed = false;
+	$message = 'Left group.';
 
-$db = new PDO('mysql:host=localhost;dbname=wuday;charset=utf8', 'wuday', 'password');
-
-$stmt = $db->prepare('SELECT number FROM people WHERE number=? AND group_id IS NOT NULL');
-$stmt->execute(array($number));
-$rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-if (count($rows) == 0) {
-	$stmt = $db->prepare('UPDATE people SET group_id=NULL WHERE number=?');
-	$stmt->execute(array($number));
-	$message = "Left group."
+	try {
+		leave_group($phone_number);
+	}
+	catch(NotGroupMemberException $e) {
+		$failed = true;
+		$message = "You're not a member of any groups.";
+	}
 }
-else {
-	$failed = true;
-	$message = "You're not a member of any group."
-}
-?><!DOCTYPE html>
+?>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="utf-8">
