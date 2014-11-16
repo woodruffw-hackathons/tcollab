@@ -14,25 +14,25 @@ function get_twilio_client() {
 
 function match_exists($query, $parameters) {
 	$db = get_database();
-	$stmt = $db->prepare('SELECT EXISTS( ' . $query . ' ) AS result');
+	$stmt = $db->prepare($query);
 	$stmt->execute($parameters);
 	$rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-	return $rows[0]['result'];
+	return count($rows) != 0;
 }
 
-class AlreadyGroupMemberExcpetion extends Exception {}
+class AlreadyGroupMemberException extends Exception {}
 class GroupDoesNotExistException extends Exception {}
 class GroupNameInUseException extends Exception {}
 class NotGroupMemberException extends Exception {}
 
 function create_group($name) {
-	if (match_exists('SELECT id FROM groups WHERE name=?', array(name))) {
+	if (match_exists('SELECT id FROM groups WHERE name=?', array($name))) {
 		throw new GroupNameInUseException();
 	}
 	else {
 		$db = get_database();
 		$stmt = $db->prepare('INSERT INTO groups(name) VALUES(:name)');
-		$stmt->execute(array(':name' => $group_name));
+		$stmt->execute(array(':name' => $name));
 	}
 }
 
@@ -61,8 +61,10 @@ function delete_group($name) {
 function join_group($group_name, $phone_number) {
 	if (match_exists('SELECT id FROM people' .
 	                 'WHERE number = ? AND group_id IS NOT NULL',
-	                 array($number))) {
-		
+	                 array($phone_number))) {
+		throw new AlreadyGroupMemberException();
+	}
+	else {
 		$db = get_database();
 		$stmt = $db->prepare('SELECT id FROM groups WHERE name = ?');
 		$stmt->execute(array($group_name));
@@ -74,42 +76,37 @@ function join_group($group_name, $phone_number) {
 		else {
 			$group_id = $rows[0]['id'];
 			
-			if (match_exists('SELECT id FROM people' .
-			                 'WHERE number = ? AND group_id IS NULL',
-			                 array($number))) {
-				
+			if (match_exists('SELECT number FROM people WHERE number = ?',
+			                 array($phone_number))) {
+				$stmt = $db->prepare('UPDATE people SET group_id = ?' .
+				                     'WHERE number = ?');
+				$stmt->execute(array($group_id, $phone_number));
+			}
+			else {
 				$stmt = $db->prepare('INSERT INTO people(number, group_id)' .
 				                     'VALUES(:number, :group_id)');
-				$stmt->execute(array(':number' => $number,
+				$stmt->execute(array(':number' => $phone_number,
 				                     ':group_id' => $group_id));
 				
 				$client = get_twilio_client();
 				$response = $client
 					->account
 					->outgoing_caller_ids
-					->create($number, array('CallDelay' => 10));
+					->create($phone_number, array('CallDelay' => 10));
 				
 				return $response->validationCode;
 			}
-			else {
-				$stmt = $db->prepare('UPDATE people SET group_id = ?' .
-				                     'WHERE number=?');
-				$stmt->execute(array($group_id, $number));
-			}
 		}
-	}
-	else {
-		throw new AlreadyGroupMemberException();
 	}
 }
 
 function leave_group($phone_number) {
 	if (match_exists('SELECT number FROM people' .
 	                 'WHERE number = ? AND group_id IS NOT NULL',
-	                 array($number)) ) {
+	                 array($phone_number)) ) {
 		$db = get_database();
 		$stmt = $db->prepare('UPDATE people SET group_id = NULL WHERE number = ?');
-		$stmt->execute(array($number));
+		$stmt->execute(array($phone_number));
 	}
 	else {
 		throw new NotGroupMemberException();

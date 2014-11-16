@@ -18,3 +18,7 @@ em.signup-or::before {
 em.signup-or::after {
 	content:" -";
 }
+
+.update-form {
+    margin-top: 200px;
+}

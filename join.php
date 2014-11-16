@@ -13,11 +13,11 @@ if (isset($_POST['group_name']) &&
 	$message = 'Joined group!';
 
 	try {
-		$verification_code = join_group($_POST['group_name'], $number)
-			if ($verification_code) {
-				$message = "Joined group! You're about to recieve a call to " .
-				"verify your phone number. When prompted, enter this code: ";
-			}
+		$verification_code = join_group($_POST['group_name'], $number);
+		if ($verification_code) {
+			$message = "Joined group! You're about to recieve a call to " .
+			"verify your phone number. When prompted, enter this code: ";
+		}
 	}
 	catch (GroupDoesNotExistException $e) {
 		$failed = true;
@@ -26,7 +26,7 @@ if (isset($_POST['group_name']) &&
 	catch (AlreadyGroupMemberException $e) {
 		$failed = true;
 		$message = "You're already a member of a group. You have to leave " .
-			"your current group before you can join another."
+			"your current group before you can join another.";
 	}
 }
 ?>
@@ -73,12 +73,13 @@ if (isset($_POST['group_name']) &&
 	<?php echo $message ?>
     </div>
     <?php }
-      require_once(menu.php); ?>
+      require_once('menu.php'); ?>
     <div class="text-center">
+    	 <div class="container update-form">
 	    <form method="post" role="form">
 		    <div class="form-group">
-			    <label for="name">Group Name</label>
-			    <input type="text" name="name" value="" />
+			    <label for="group_name">Group Name</label>
+			    <input type="text" name="group_name" value="" />
 		    </div>
 		    <div class="form-group">
 			    <label for="area_code">Your Cell Number</label>
@@ -88,6 +89,7 @@ if (isset($_POST['group_name']) &&
 		    </div>
 		    <button type="submit" class="btn btn-default">Join Group</button>
 	    </form>
+	    </div>
     </div>
     <!---Footer-->
     <div class="navbar navbar-inverse navbar-fixed-bottom" role="navigation">

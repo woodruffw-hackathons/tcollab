@@ -1,5 +1,5 @@
 <div class="navbar navbar-default navbar-fixed-top" role="navigation">
-    <div class="containter">
+    <div class="container">
       <div class="navbar-header">
         <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
           <span class="sr-only">Toggle Navigation</span>
@@ -11,7 +11,7 @@
       </div>
       <div class="navbar-collapse collapse">
         <ul class="nav navbar-nav navbar-right">
-            <li class="active"><a href="#">Home</a></li>
+            <li class="active"><a href="index.php">Home</a></li>
             <li class="dropdown"><a href="#" class ="dropdown-toggle" data-toggle="dropdown">Yourself<b class="caret"></b></a>
               <ul class="dropdown-menu">
                 <li class ="dropdown-header">Options</li>

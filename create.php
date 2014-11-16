@@ -53,11 +53,12 @@ if (isset($_POST['name'])) {
 <body>
 	<?php if(isset($message)) {?>
 	<div class="status <?php echo $failed ? 'failed' : 'succeeded'?>">
-	<?php echo $message ?>
-    </div>
+	     <?php echo $message ?>
+    	     </div>
     <?php }
-      require_once(menu.php); ?>
+      require_once('menu.php'); ?>
     <div class="text-center">
+    <div class="container update-form">
 	    <form method="post" role="form">
 		    <div class="form-group">
 			    <label for="name">Group Name</label>
@@ -65,6 +66,7 @@ if (isset($_POST['name'])) {
 		    </div>
 		    <button type="submit" class="btn btn-default">Create Group</button>
 	    </form>
+    </div>
     </div>
     <!---Footer-->
     <div class="navbar navbar-inverse navbar-fixed-bottom" role="navigation">

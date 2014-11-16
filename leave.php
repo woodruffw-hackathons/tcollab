@@ -62,8 +62,9 @@ if (isset($_POST['area_code']) &&
 	<?php echo $message ?>
     </div>
     <?php }
-      require_once(menu.php); ?>
+      require_once('menu.php'); ?>
     <div class="text-center">
+    	 <div class="container update-form">
 	    <form method="post" role="form">
 		    <div class="form-group">
 			    <label for="area_code">Your Cell Number</label>
@@ -73,6 +74,7 @@ if (isset($_POST['area_code']) &&
 		    </div>
 		    <button type="submit" class="btn btn-default">Leave Group</button>
 	    </form>
+	    </div>
     </div>
     <!---Footer-->
     <div class="navbar navbar-inverse navbar-fixed-bottom" role="navigation">
