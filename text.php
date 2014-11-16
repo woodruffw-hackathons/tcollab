@@ -22,12 +22,19 @@
 				if (count($rows) == 0) {
 					$stmt = $db->prepare('INSERT INTO people(number, group_id) VALUES(:number, :group_id)');
 					$stmt->execute(array(':number' => $_POST['From'], ':group_id' => $group_id));
+
+					$client = new Services_Twilio($sid, $token);
+					$response = $client->account->outgoing_caller_ids->create($number, array('CallDelay' => 20));
+					?><Message>
+					Joined group! You're about to recieve a call to verify your phone number. When prompted, enter this code:
+					<?php echo $response->validationCode; ?>
+					</Message><?php
 				}
 				else {
 					$stmt = $db->prepare('UPDATE people SET group_id=? WHERE number=?');
 					$stmt->execute(array($group_id, $_POST['From']));
+					?><Message>Group joined.</Message><?php
 				}
-				?><Message>Group joined.</Message><?php
 			}
 		}
 		else {

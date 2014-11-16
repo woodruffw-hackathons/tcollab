@@ -3,3 +3,18 @@
 	text-decoration: none;
 }
 
+em.signup-or {
+	display: block;
+	font-weight: bold;
+	font-size: 1.9em;
+	margin: 10px 0;
+	font-family: Garamond;
+}
+
+em.signup-or::before {
+	content:"- ";
+}
+
+em.signup-or::after {
+	content:" -";
+}
